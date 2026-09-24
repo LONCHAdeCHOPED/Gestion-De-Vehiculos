@@ -1,13 +1,9 @@
-package org.example
+package org.example.Util
 
 import java.nio.file.Path
 import java.nio.file.Files
-import java.nio.charset.StandardCharsets
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
-import com.sun.source.tree.TryTree
-import java.io.File
-import java.nio.file.StandardOpenOption
 
 
 data class Vehiculo(
@@ -20,6 +16,7 @@ data class Vehiculo(
 
 fun main() {
     var opcion: Int = -1
+
 
     do {
         println("--------------------------------------")
@@ -52,6 +49,7 @@ fun main() {
 fun menuCSV() {
     var numero : Int
     val ruta = Path.of("datos", "mecanicos.csv")
+    val gestion = GestorMecanico()
     do {
         println("--------------------------------")
         println("----------- CRUD CSV -----------")
@@ -64,6 +62,7 @@ fun menuCSV() {
         numero = readLine()!!.toInt()
         when (numero) {
             1 -> println(leerDatosCSV(ruta).joinToString(separator = "\n"))
+            2 -> println(gestion.añadirCSV(ruta, leerDatosCSV(ruta)))
             0 -> {
                 println("Volviendo al menu principal...")
             }
@@ -110,33 +109,5 @@ fun leerDatosCSV(ruta: Path): List<Vehiculo> {
 
 }
 
-//fun escribirCSV(ruta: Path, vehiculos: List<Vehiculo>) {
-//    try {
-//        val fichero: File = ruta.toFile()
-//        csvWriter {
-//            delimiter = ';'
-//        }.writeAll(
-//            vehiculos.map{vehiculo ->
-//                listOf(
-//                    vehiculo.id_mecanico.toString(),
-//                    vehiculo.nombre,
-//                    vehiculo.especialidad,
-//                    vehiculo.experiencia.toString(),
-//                    vehiculo.tarifa_hora.toString(),
-//                )
-//            }, fichero
-//        )
-//        println("--- Informacion guardada con exito en: $fichero")
-//    } catch (e: Exception) {
-//        println("Error al escribir CSV: ${e.message}")
-//    }
-//}
 
-fun añadirCSV(ruta : Path, vehiculo: List<Vehiculo>) {
-    val valido : Boolean = false
 
-    try {
-
-    }
-
-}
