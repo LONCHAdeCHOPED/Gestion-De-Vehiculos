@@ -63,6 +63,8 @@ fun menuCSV() {
         when (numero) {
             1 -> println(leerDatosCSV(ruta).joinToString(separator = "\n"))
             2 -> println(gestion.añadirCSV(ruta, leerDatosCSV(ruta)))
+            3 -> println(gestion.modificarCSV(ruta))
+            4 -> println(gestion.eliminarCSV(ruta))
             0 -> {
                 println("Volviendo al menu principal...")
             }
