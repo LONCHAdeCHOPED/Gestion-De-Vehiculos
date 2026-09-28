@@ -1,0 +1,25 @@
+<mecanicos>
+    <mecanico>
+        <id_mecanico>1</id_mecanico>
+        <nombre>Juan Pérez</nombre>
+        <especialidad>Motor</especialidad>
+        <experiencia>10</experiencia>
+        <tarifa_hora>35.5</tarifa_hora>
+    </mecanico>
+
+    <mecanico>
+        <id_mecanico>2</id_mecanico>
+        <nombre>María López</nombre>
+        <especialidad>Electricidad</especialidad>
+        <experiencia>7</experiencia>
+        <tarifa_hora>30.0</tarifa_hora>
+    </mecanico>
+
+    <mecanico>
+        <id_mecanico>3</id_mecanico>
+        <nombre>Carlos García</nombre>
+        <especialidad>Frenos</especialidad>
+        <experiencia>15</experiencia>
+        <tarifa_hora>40.0</tarifa_hora>
+    </mecanico>
+</mecanicos>

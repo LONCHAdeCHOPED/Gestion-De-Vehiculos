@@ -3,15 +3,23 @@ package org.example.Util
 import java.nio.file.Path
 import java.nio.file.Files
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-
-data class Vehiculo(
+data class Mecanico(
     val id_mecanico: Int,
     val nombre: String,
     val especialidad: String,
     val experiencia : Int,
-    val tarifa_hora: Double
+    val tarifaHora: Double
 )
 
 fun main() {
@@ -23,13 +31,18 @@ fun main() {
         println("----------- MENÚ PRINCIPAL -----------")
         println("--------------------------------------")
         println("1. Gestion CSV")
+        println("2. Leer datos desde XML")
+        println("3. Leer datos desde JSON")
         println("0. Salir")
 
         try {
             opcion = readLine()!!.toInt()
 
+
             when (opcion) {
                 1 -> menuCSV()
+                2 -> leerDatosXML(Path.of("datos", "mecanico.xml"))
+                3 -> leerJSON(Path.of("datos", "mecanicos.json"))
                 0 -> {
                     println("FIN")
                      }
@@ -57,7 +70,7 @@ fun menuCSV() {
         println("1. Leer datos desde CSV")
         println("2. Añadir un registro nuevo al final del fichero")
         println("3. Modificar un registro existente por ID")
-        println("4.Eliminar un registro existente por ID")
+        println("4. Eliminar un registro existente por ID")
         println("0. Volver al menú principal")
         numero = readLine()!!.toInt()
         when (numero) {
@@ -73,8 +86,8 @@ fun menuCSV() {
 
 }
 
-fun leerDatosCSV(ruta: Path): List<Vehiculo> {
-    var vehiculos: List<Vehiculo> = emptyList()
+fun leerDatosCSV(ruta: Path): List<Mecanico> {
+    var mecanicos: List<Mecanico> = emptyList()
 
     if (!Files.isReadable(ruta)) {
         println("Error: No se puede leer el fichero en la ruta: $ruta")
@@ -86,7 +99,7 @@ fun leerDatosCSV(ruta: Path): List<Vehiculo> {
 
         val filas: List<List<String>> = reader.readAll(ruta.toFile())
 
-        vehiculos = filas.mapNotNull { columnas ->
+        mecanicos = filas.mapNotNull { columnas ->
             if (columnas.size >= 5){
                 try {
                     val idMecanico = columnas[0].toInt()
@@ -94,7 +107,7 @@ fun leerDatosCSV(ruta: Path): List<Vehiculo> {
                     val especialidadMecanico = columnas[2]
                     val experienciaMecanico = columnas[3].toInt()
                     val tarifaHoraMecanico = columnas[4].toDouble()
-                    Vehiculo(idMecanico, nombreMecanico, especialidadMecanico, experienciaMecanico, tarifaHoraMecanico)
+                    Mecanico(idMecanico, nombreMecanico, especialidadMecanico, experienciaMecanico, tarifaHoraMecanico)
                 } catch (e: Exception){
                     println("Fila inválida ignorada: $columnas -> Error: ${e.message}")
                     null
@@ -107,9 +120,120 @@ fun leerDatosCSV(ruta: Path): List<Vehiculo> {
         }
     }
     println("--- Información leida con existo de: $ruta")
-    return vehiculos
+    return mecanicos
 
 }
 
+// Clase que modela los nodos individuales <mecanico>
+data class MecanicoXML(
+    @JacksonXmlProperty(localName = "id_mecanico")
+    val idMecanico: Int,
+    @JacksonXmlProperty(localName = "nombre")
+    val nombreMecanico: String,
+    @JacksonXmlProperty(localName = "especialidad")
+    val especialidad: String,
+    @JacksonXmlProperty(localName = "experiencia")
+    val experiencia: Int,
+    @JacksonXmlProperty(localName = "tarifa_hora")
+    val tarifaHora: Double
+)
 
+@JacksonXmlRootElement(localName = "mecanicos")
+data class MecanicoWrapper(
+    @JacksonXmlElementWrapper(useWrapping = false)
+    @JacksonXmlProperty(localName = "mecanico")
+    val listaMecanico: List<MecanicoXML> = emptyList()
+)
+
+fun leerDatosXML(ruta: Path): List<MecanicoXML> {
+    var contenedor = MecanicoWrapper(emptyList())
+
+    if (!Files.isReadable(ruta)) {
+        println("Error: No se puede leer datos desde XML")
+    } else {
+        val fichero = ruta.toFile()
+        val xmlMapper = XmlMapper().registerKotlinModule()
+
+        contenedor = xmlMapper.readValue(fichero)
+        println("--- Información leída con éxito de: $ruta")
+    }
+    for (mecanicos in contenedor.listaMecanico){
+        println("ID: ${mecanicos.idMecanico}, " +
+                "Nombre: ${mecanicos.nombreMecanico}, " +
+                "Especialidad: ${mecanicos.especialidad}, " +
+                "Experiencia: ${mecanicos.experiencia}, " +
+                "Tarifa ${mecanicos.tarifaHora}")
+    }
+    return contenedor.listaMecanico
+}
+
+fun escribirDatosXML(ruta: Path, mecanicos: List<MecanicoXML>) {
+    try {
+        val fichero = ruta.toFile()
+        val contenedor = MecanicoWrapper(mecanicos)
+        val xmlMapper = XmlMapper().registerKotlinModule()
+
+        val xmlString = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(contenedor)
+        fichero.writeText(xmlString)
+
+        println("--- Informacion guardada en XML: $fichero")
+    } catch (e: Exception){
+        println("Error al guardar XML: ${e.message}")
+    }
+}
+
+// Anotamos la data class indicando que es serializable para el compilador de Kotlin
+@Serializable
+data class MecanicoJSON(
+    @SerialName("id_mecanico") val idMecanico: Int,
+    @SerialName("nombre") val nombreMecanico: String,
+    @SerialName("especialidad") val especialidad: String,
+    @SerialName("experiencia") val experiencia: Int,
+    @SerialName("tarifa_hora") val tarifaHora: Double
+)
+
+fun leerJSON(ruta: Path) : List<MecanicoJSON> {
+    var mecanicos: List<MecanicoJSON> = emptyList()
+
+    if (!Files.isReadable(ruta)) {
+        println("Error: No se puede leer JSON")
+    } else {
+        val jsonString = Files.readString(ruta)
+
+        mecanicos = Json.decodeFromString<List<MecanicoJSON>>(jsonString)
+        println("--- Información leída con éxito de: $ruta")
+    }
+    for (mecanicos in mecanicos){
+        println("ID: ${mecanicos.idMecanico}, " +
+                "Nombre: ${mecanicos.nombreMecanico}, " +
+                "Especialidad: ${mecanicos.especialidad}, " +
+                "Experiencia: ${mecanicos.experiencia}, " +
+                "Tarifa ${mecanicos.tarifaHora}")
+    }
+    return mecanicos
+}
+
+fun escribirJSON(ruta: Path, mecanicos: List<MecanicoJSON>) {
+    try {
+        val jsonConfigurador = Json{prettyPrint = true}
+        val jsonString = jsonConfigurador.encodeToString(mecanicos)
+
+        Files.writeString(ruta, jsonString)
+        println("--- Información guardada en: $ruta")
+    } catch (e: Exception){
+        println("Error al guardar JSON: ${e.message}")
+    }
+}
+
+fun convertirJSONaCSV(ruta: Path){
+    var mecanicos: List<MecanicoJSON> = emptyList()
+    for (mecanicos in mecanicos){
+        println("ID: ${mecanicos.idMecanico}, " +
+                "Nombre: ${mecanicos.nombreMecanico}, " +
+                "Especialidad: ${mecanicos.especialidad}, " +
+                "Experiencia: ${mecanicos.experiencia}, " +
+                "Tarifa ${mecanicos.tarifaHora}")
+    }
+
+}
 

@@ -7,8 +7,8 @@ import java.nio.file.Path
 class GestorMecanico
 
 {
-    fun añadirCSV(ruta: Path, vehiculo: List<Vehiculo>) {
-        val idMecanicoExistente = vehiculo.map { it.id_mecanico }
+    fun añadirCSV(ruta: Path, mecanico: List<Mecanico>) {
+        val idMecanicoExistente = mecanico.map { it.id_mecanico }
         var idMecanico = 0
         val nombreMecanico: String
         val especialidadMecanico: String

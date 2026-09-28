@@ -1,0 +1,30 @@
+[
+  {
+    "id_mecanico": 1,
+    "nombre": "Juan Pérez",
+    "especialidad": "Mecánica general",
+    "experiencia": 8,
+    "tarifa_hora": 35.50
+  },
+  {
+    "id_mecanico": 2,
+    "nombre": "Carlos García",
+    "especialidad": "Electricidad del automóvil",
+    "experiencia": 5,
+    "tarifa_hora": 40.00
+  },
+  {
+    "id_mecanico": 3,
+    "nombre": "Miguel López",
+    "especialidad": "Motores diésel",
+    "experiencia": 12,
+    "tarifa_hora": 45.75
+  },
+  {
+    "id_mecanico": 4,
+    "nombre": "Pedro Martínez",
+    "especialidad": "Frenos y suspensión",
+    "experiencia": 7,
+    "tarifa_hora": 32.50
+  }
+]
