@@ -9,6 +9,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -226,14 +227,38 @@ fun escribirJSON(ruta: Path, mecanicos: List<MecanicoJSON>) {
 }
 
 fun convertirJSONaCSV(ruta: Path){
-    var mecanicos: List<MecanicoJSON> = emptyList()
-    for (mecanicos in mecanicos){
-        println("ID: ${mecanicos.idMecanico}, " +
-                "Nombre: ${mecanicos.nombreMecanico}, " +
-                "Especialidad: ${mecanicos.especialidad}, " +
-                "Experiencia: ${mecanicos.experiencia}, " +
-                "Tarifa ${mecanicos.tarifaHora}")
+    val gestor = GestorMecanico()
+
+    val rutaJSON = ruta.resolve("mecanicos.json")
+    val rutaCSV = ruta.resolve("mecanicos.csv")
+
+    val mecanicosJSON : List<MecanicoJSON> = leerJSON(rutaJSON)
+
+    val mecanicos: List<Mecanico> = mecanicosJSON.map {
+        Mecanico(
+            id_mecanico = it.idMecanico,
+            nombre = it.nombreMecanico,
+            especialidad = it.especialidad,
+            experiencia = it.experiencia,
+            tarifaHora = it.tarifaHora
+        )
+    }
+
+        csvWriter { delimiter = ';' }.open(rutaCSV.toFile()) {
+            mecanicos.forEach {mecanico ->
+                writeRow(
+                    mecanico.id_mecanico,
+                    mecanico.nombre,
+                    mecanico.especialidad,
+                    mecanico.experiencia,
+                    mecanico.tarifaHora
+                )
+            }
+        }
+
+        println("--- JSON convertido a CSV")
     }
 
 }
+
 
