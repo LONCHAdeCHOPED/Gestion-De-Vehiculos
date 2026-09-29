@@ -14,6 +14,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.math.exp
 
 data class Mecanico(
     val id_mecanico: Int,
@@ -34,6 +35,7 @@ fun main() {
         println("1. Gestion CSV")
         println("2. Leer datos desde XML")
         println("3. Leer datos desde JSON")
+        println("4. Convertir JSON a CSV")
         println("0. Salir")
 
         try {
@@ -44,6 +46,7 @@ fun main() {
                 1 -> menuCSV()
                 2 -> leerDatosXML(Path.of("datos", "mecanico.xml"))
                 3 -> leerJSON(Path.of("datos", "mecanicos.json"))
+                4 -> convertirJSONaCSV(Path.of("datos"))
                 0 -> {
                     println("FIN")
                      }
@@ -255,10 +258,173 @@ fun convertirJSONaCSV(ruta: Path){
                 )
             }
         }
-
         println("--- JSON convertido a CSV")
+    }
+
+fun convertirCSVaJSON(rutaCsv: Path, rutaJson: Path) {
+    try {
+        val listaMecanicos = leerDatosCSV(rutaCsv)
+
+        if (listaMecanicos.isEmpty()) {
+            println("El archivo CSV está vacio")
+            return
+        }
+
+        val mecanicoJSON = listaMecanicos.map {
+            MecanicoJSON(
+                idMecanico = it.id_mecanico,
+                nombreMecanico = it.nombre,
+                especialidad = it.especialidad,
+                experiencia = it.experiencia,
+                tarifaHora = it.tarifaHora
+            )
+        }
+
+        val jsonConfigurador = Json { prettyPrint = true }
+        val jsonString = jsonConfigurador.encodeToString(mecanicoJSON)
+        Files.writeString(rutaJson, jsonString)
+        println("Conversión completada")
+
+    } catch (e: Exception) {
+        println("Error")
+    }
+}
+
+fun convertirCSVaXML(rutaCsv: Path, rutaXml: Path) {
+    try {
+        val listaMecanicos = leerDatosCSV(rutaCsv)
+
+        if (listaMecanicos.isEmpty()) {
+            println("El archivo CSV esta vacio")
+            return
+        }
+
+        val mecanicosXML = listaMecanicos.map {
+            MecanicoXML(
+                idMecanico = it.id_mecanico,
+                nombreMecanico = it.nombre,
+                especialidad = it.especialidad,
+                experiencia = it.experiencia,
+                tarifaHora = it.tarifaHora
+            )
+        }
+
+        val contenedor = MecanicoWrapper(mecanicosXML)
+        val xmlMapper = XmlMapper().registerKotlinModule()
+        val xmlString = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(contenedor)
+        rutaXml.toFile().writeText(xmlString)
+        println("Conversión completada")
+
+    } catch (e: Exception) {
+        println("Error")
+    }
+}
+
+fun convertirJSONaXML(rutaJson: Path, rutaXml: Path) {
+    if (!Files.isReadable(rutaJson)) {
+        println("Error: No se puede leer el fichero JSON")
+        return
+    }
+
+    try {
+        val jsonString = Files.readString(rutaJson)
+        val mecanicoJSON = Json.decodeFromString<List<MecanicoJSON>>(jsonString)
+
+        if (mecanicoJSON.isEmpty()) {
+            println("El archivo JSON esta vacio")
+            return
+        }
+
+        val circuitosXml = mecanicoJSON.map {
+            MecanicoXML(
+                idMecanico = it.idMecanico,
+                nombreMecanico = it.nombreMecanico,
+                especialidad = it.especialidad,
+                experiencia = it.experiencia,
+                tarifaHora = it.tarifaHora
+            )
+        }
+
+        val fichero = rutaXml.toFile()
+        val contenedor = MecanicoWrapper(circuitosXml)
+        val xmlMapper = XmlMapper().registerKotlinModule()
+        val xmlString = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(contenedor)
+        fichero.writeText(xmlString)
+        println("Conversion completada")
+
+    } catch (e: Exception) {
+        println("Error")
+    }
+}
+
+fun convertirXMLaCSV(rutaXml: Path, rutaCsv: Path) {
+    if (!Files.isReadable(rutaXml)) {
+        println("Error: No se puede leer el fichero XML")
+        return
+    }
+
+    try {
+        val xmlMapper = XmlMapper().registerKotlinModule()
+        val contenedor = xmlMapper.readValue<MecanicoWrapper>(rutaXml.toFile())
+        val mecanicoXML = contenedor.listaMecanico
+
+        if (mecanicoXML.isEmpty()) {
+            println("El archivo XML esta vacio")
+            return
+        }
+
+        csvWriter { delimiter = ';' }.open(rutaCsv.toFile(), append = false) {
+            mecanicoXML.forEach { mecanico ->
+                writeRow(
+                    mecanico.idMecanico,
+                    mecanico.nombreMecanico,
+                    mecanico.especialidad,
+                    mecanico.experiencia,
+                    mecanico.tarifaHora
+                )
+            }
+        }
+        println("Conversion completada")
+
+    } catch (e: Exception) {
+        println("Error")
     }
 
 }
 
 
+fun convertirXMLaJSON(rutaXml: Path, rutaJson: Path) {
+    if (!Files.isReadable(rutaXml)) {
+        println("Error: No se puede leer el fichero XML")
+        return
+    }
+
+    try {
+        val xmlMapper = XmlMapper().registerKotlinModule()
+        val contenedor = xmlMapper.readValue(rutaXml.toFile(), MecanicoWrapper::class.java)
+        val mecanicoXML = contenedor.listaMecanico
+
+        if (mecanicoXML.isEmpty()) {
+            println("El archivo XML está vacio")
+            return
+        }
+
+        val mecanicoJSON = mecanicoXML.map {
+            MecanicoJSON(
+                idMecanico = it.idMecanico,
+                nombreMecanico = it.nombreMecanico,
+                especialidad = it.especialidad,
+                experiencia = it.experiencia,
+                tarifaHora = it.tarifaHora
+            )
+        }
+
+        val jsonConfigurador = Json { prettyPrint = true }
+        val jsonString = jsonConfigurador.encodeToString(mecanicoJSON)
+        Files.writeString(rutaJson, jsonString)
+        println("Conversion completada")
+
+    } catch (e: Exception) {
+        println("Error")
+    }
+}
