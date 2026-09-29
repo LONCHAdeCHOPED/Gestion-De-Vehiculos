@@ -14,6 +14,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.io.path.Path
 import kotlin.math.exp
 
 data class Mecanico(
@@ -36,6 +37,11 @@ fun main() {
         println("2. Leer datos desde XML")
         println("3. Leer datos desde JSON")
         println("4. Convertir JSON a CSV")
+        println("5. Convertir JSON a XML")
+        println("6. Convertir XML a JSON")
+        println("7. Convertir XML a CSV")
+        println("8. Convertir CSV a JSON")
+        println("9. Convertir CSV a XML")
         println("0. Salir")
 
         try {
@@ -46,7 +52,12 @@ fun main() {
                 1 -> menuCSV()
                 2 -> leerDatosXML(Path.of("datos", "mecanico.xml"))
                 3 -> leerJSON(Path.of("datos", "mecanicos.json"))
-                4 -> convertirJSONaCSV(Path.of("datos"))
+                4 -> convertirJSONaCSV(Path.of("datos")) // Archivos en el metodo
+                5 -> convertirJSONaXML(Path.of("datos", "mecanicos.json"), Path.of("datos", "mecanicosJSON-XML.xml"))
+                6 -> convertirXMLaJSON(Path.of("datos", "mecanico.xml"), Path.of("datos", "mecanicosXML-JSON.json"))
+                7 -> convertirXMLaCSV(Path.of("datos", "mecanico.xml"), Path.of("datos", "mecanicosXML-CSV.csv"))
+                8 -> convertirCSVaXML(Path.of("datos", "mecanicos.csv"), Path("datos", "mecanicosCSV-XML.xml"))
+                9 -> convertirCSVaJSON(Path.of("datos", "mecanicos.csv"), Path.of("datos", "mecanicosCSV-JSON.json"))
                 0 -> {
                     println("FIN")
                      }
