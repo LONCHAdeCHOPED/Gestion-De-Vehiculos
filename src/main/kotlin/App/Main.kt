@@ -42,6 +42,7 @@ fun main() {
         println("7. Convertir XML a CSV")
         println("8. Convertir CSV a JSON")
         println("9. Convertir CSV a XML")
+        println("10. Gestión de fichero BIN")
         println("0. Salir")
 
         try {
