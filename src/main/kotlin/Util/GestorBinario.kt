@@ -24,6 +24,7 @@ class GestorBinario {
             when (numero) {
                 1 -> importarFicheroDesdeCSV(Path.of("datos", "mecanicos.csv"))
                 2 -> leerMecanicosBIN()
+                3 -> añadirMecanicoBIN(leerMecanicosBIN())
                 0 -> {
                     println("Volviendo al menu principal...")
                 }
@@ -153,6 +154,84 @@ fun leerMecanicosBIN(): List<MecanicoBinario> {
     return mecanicos
 }
 
-fun añadirMecanicoBIN() {
+fun añadirMecanicoBIN(mecanico : List<MecanicoBinario>) {
+    val idMecanicoExistente = mecanico.map { it.id_mecanico }
+    var idValido = false
+    var idMecanico = 0
+    do {
+        println("Introduce un ID para el mecánico no existente")
+        val idMecanicoValida = readln().toIntOrNull()
+        if (idMecanicoValida == null) {
+            println("Error, ID no valida")
+        } else if (idMecanicoValida in idMecanicoExistente) {
+            println("Error, el ID ya existe")
+        } else {
+            println("ID valido")
+            idMecanico = idMecanicoValida
+            idValido = true
+        }
+    } while (!idValido)
+
+    println("Dime el nombre del Mecanico")
+    val nombreMecanico = readln()
+    println("Dime la especialidad del Mecanico")
+    val especialidad = readln()
+    println("Dime la experiencia del Mecanico")
+    val experiencia = readln().toInt()
+    println("Dime la Tarifa del Mecanico")
+    val tarifa = readln().toDouble()
+
+    val nuevoMecanico = MecanicoBinario(idMecanico, nombreMecanico, especialidad, experiencia, tarifa)
+
+    try {
+        FileChannel.open(
+            archivoPath,
+            StandardOpenOption.WRITE,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.APPEND
+        ).use { canal ->
+            val buffer = ByteBuffer.allocate(TAMAÑO_REGISTRO)
+
+            buffer.putInt(nuevoMecanico.id_mecanico)
+
+            val nombreBytes = nuevoMecanico.nombre_mecanico
+                .padEnd(TAMAÑO_NOMBRE, ' ')
+                .toByteArray(Charsets.ISO_8859_1)
+            buffer.put(nombreBytes, 0, TAMAÑO_NOMBRE)
+
+            val especialidadBytes = nuevoMecanico.especialidad_mecanico
+                .padEnd(TAMAÑO_ESPECIALIDAD, ' ')
+                .toByteArray(Charsets.ISO_8859_1)
+            buffer.put(especialidadBytes, 0, TAMAÑO_ESPECIALIDAD)
+
+            buffer.putInt(nuevoMecanico.experiencia_mecanico)
+            buffer.putDouble(nuevoMecanico.tarifa_mecanico)
+
+            buffer.flip()
+            while (buffer.hasRemaining()) {
+                canal.write(buffer)
+            }
+            println("- Mecanico '${nuevoMecanico.nombre_mecanico.trim()}' añadido correctamente. -")
+        }
+    } catch (e: Exception) {
+        println("Error al añadir al mecanico: ${e.message}")
+    }
+}
+
+fun modificarNombre(){
+    println("--- Modificar Nombre ---")
+    print("Dime el ID del mecanico que quieres modificar")
+
+    println("Dime el nuevo nombre")
+    val nombre = readln()
+
+    try {
+        FileChannel.open(
+            archivoPath,
+            StandardOpenOption.READ
+        )
+    }
+
+
 
 }
