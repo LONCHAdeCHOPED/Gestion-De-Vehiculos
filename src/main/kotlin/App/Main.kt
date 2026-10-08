@@ -27,7 +27,7 @@ data class Mecanico(
 
 fun main() {
     var opcion: Int = -1
-
+    val gestorBin = GestorBinario()
 
     do {
         println("--------------------------------------")
@@ -59,6 +59,7 @@ fun main() {
                 7 -> convertirXMLaCSV(Path.of("datos", "mecanico.xml"), Path.of("datos", "mecanicosXML-CSV.csv"))
                 8 -> convertirCSVaXML(Path.of("datos", "mecanicos.csv"), Path("datos", "mecanicosCSV-XML.xml"))
                 9 -> convertirCSVaJSON(Path.of("datos", "mecanicos.csv"), Path.of("datos", "mecanicosCSV-JSON.json"))
+                10 -> gestorBin.menuBIN()
                 0 -> {
                     println("FIN")
                      }
