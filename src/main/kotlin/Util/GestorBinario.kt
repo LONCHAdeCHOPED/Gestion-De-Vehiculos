@@ -3,6 +3,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 
 class GestorBinario {
@@ -25,6 +26,8 @@ class GestorBinario {
                 1 -> importarFicheroDesdeCSV(Path.of("datos", "mecanicos.csv"))
                 2 -> leerMecanicosBIN()
                 3 -> añadirMecanicoBIN(leerMecanicosBIN())
+                4 -> modificarNombre()
+                5 -> eliminarMecanicoBIN()
                 0 -> {
                     println("Volviendo al menu principal...")
                 }
@@ -220,18 +223,142 @@ fun añadirMecanicoBIN(mecanico : List<MecanicoBinario>) {
 
 fun modificarNombre(){
     println("--- Modificar Nombre ---")
-    print("Dime el ID del mecanico que quieres modificar")
+    var idMecanico: Int
+    while (true) {
+        print("Dime el ID del mecánico que quieres modificar: ")
+        val input = readln().toIntOrNull()
+
+        if (input == null) {
+            println("Error: ID no válido.")
+        } else {
+            idMecanico = input
+            break
+        }
+    }
 
     println("Dime el nuevo nombre")
     val nombre = readln()
+    val nombreBytes = nombre.toByteArray(Charsets.ISO_8859_1)
+
+    if (nombreBytes.size > TAMAÑO_NOMBRE) {
+        println("Error: el nombre no puede superar $TAMAÑO_NOMBRE bytes.")
+        return
+    }
 
     try {
         FileChannel.open(
             archivoPath,
-            StandardOpenOption.READ
-        )
+            StandardOpenOption.READ,
+            StandardOpenOption.WRITE
+        ).use { canal ->
+
+            val buffer = ByteBuffer.allocate(TAMAÑO_REGISTRO)
+            var encontrado = false
+
+            while (canal.read(buffer) > 0 && !encontrado) {
+                // Solo procesar registros completos
+                if (buffer.position() < TAMAÑO_REGISTRO) {
+                    println("Error: registro binario incompleto.")
+                    return
+                }
+
+                val posicionActual = canal.position()
+                buffer.flip()
+                val id = buffer.getInt()
+
+                if (id == idMecanico) {
+                    encontrado = true
+                    val inicioRegistro = posicionActual - TAMAÑO_REGISTRO
+                    val posicionNombre = inicioRegistro + TAMAÑO_ID
+                    canal.position(posicionNombre)
+
+                    // Preparar el nuevo nombre con espacios
+                    val nombreRelleno = nombre.padEnd(
+                        TAMAÑO_NOMBRE,
+                        ' '
+                    ).toByteArray(Charsets.ISO_8859_1)
+
+                    val bufferNombre = ByteBuffer.wrap(
+                        nombreRelleno,
+                        0,
+                        TAMAÑO_NOMBRE
+                    )
+
+                    while (bufferNombre.hasRemaining()) {
+                        canal.write(bufferNombre)
+                    }
+                }
+                buffer.clear()
+            }
+
+            if (encontrado) {
+                println("Nombre del mecánico con ID $idMecanico modificado correctamente.")
+            } else {
+                println("No se encontró ningún mecánico con el ID $idMecanico.")
+            }
+        }
+    }catch (e: Exception) {
+        println("Error al modificar el nombre: ${e.message}")
+    }
+}
+
+
+fun eliminarMecanicoBIN() {
+    var idMecanico: Int
+    while (true) {
+        print("Dime el ID del mecánico que quieres eliminar: ")
+        val input = readln().toIntOrNull()
+        if (input == null) {
+            println("Error: Debes introducir un ID válido.")
+        } else {
+            idMecanico = input
+            break
+        }
     }
 
+    val pathTemporal = Path.of(archivoPath.toString() + ".tmp")
+    var mecanicoEncontrado = false
 
+    try {
+        FileChannel.open(
+            archivoPath, StandardOpenOption.READ).use { canalLectura ->
+            FileChannel.open(
+                pathTemporal,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING
+            ).use { canalEscritura ->
+                val buffer = ByteBuffer.allocate(TAMAÑO_REGISTRO)
 
+                while (canalLectura.read(buffer) > 0) {
+                    buffer.flip()
+                    val id = buffer.getInt()
+
+                    if (id == idMecanico) {
+                        mecanicoEncontrado = true
+                    } else {
+                        buffer.rewind()
+                        while (buffer.hasRemaining()) {
+                            canalEscritura.write(buffer)
+                        }
+                    }
+                    buffer.clear()
+                }
+            }
+        }
+
+        if (mecanicoEncontrado) {
+            // Sustituir el fichero original por el temporal
+            Files.move(
+                pathTemporal,
+                archivoPath,
+                StandardCopyOption.REPLACE_EXISTING)
+            println("\n**** Mecánico con ID $idMecanico eliminado con éxito.")
+        } else {
+            Files.deleteIfExists(pathTemporal)
+            println("No se encontró el mecánico con ID: $idMecanico")
+        }
+    } catch (e: Exception) {
+        println("Error durante la eliminación: ${e.message}")
+    }
 }

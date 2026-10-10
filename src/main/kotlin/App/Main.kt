@@ -91,7 +91,7 @@ fun menuCSV() {
         println("0. Volver al menú principal")
         numero = readLine()!!.toInt()
         when (numero) {
-            1 -> println(leerDatosCSV(ruta).joinToString(separator = "\n"))
+            1 -> leerDatosCSV(ruta)
             2 -> println(gestion.añadirCSV(ruta, leerDatosCSV(ruta)))
             3 -> println(gestion.modificarCSV(ruta))
             4 -> println(gestion.eliminarCSV(ruta))
@@ -136,7 +136,13 @@ fun leerDatosCSV(ruta: Path): List<Mecanico> {
 
         }
     }
-    println("--- Información leida con existo de: $ruta")
+    for (mecanicos in mecanicos){
+        println("ID: ${mecanicos.id_mecanico}, " +
+                "Nombre: ${mecanicos.nombre}, " +
+                "Especialidad: ${mecanicos.especialidad}, " +
+                "Experiencia: ${mecanicos.experiencia}, " +
+                "Tarifa: ${mecanicos.tarifaHora}")
+    }
     return mecanicos
 
 }
@@ -244,10 +250,8 @@ fun escribirJSON(ruta: Path, mecanicos: List<MecanicoJSON>) {
 
 fun convertirJSONaCSV(ruta: Path){
     val gestor = GestorMecanico()
-
     val rutaJSON = ruta.resolve("mecanicos.json")
     val rutaCSV = ruta.resolve("mecanicos.csv")
-
     val mecanicosJSON : List<MecanicoJSON> = leerJSON(rutaJSON)
 
     val mecanicos: List<Mecanico> = mecanicosJSON.map {
@@ -271,7 +275,7 @@ fun convertirJSONaCSV(ruta: Path){
                 )
             }
         }
-        println("--- JSON convertido a CSV")
+        println("--- JSON convertido a CSV ---")
     }
 
 fun convertirCSVaJSON(rutaCsv: Path, rutaJson: Path) {
@@ -296,10 +300,10 @@ fun convertirCSVaJSON(rutaCsv: Path, rutaJson: Path) {
         val jsonConfigurador = Json { prettyPrint = true }
         val jsonString = jsonConfigurador.encodeToString(mecanicoJSON)
         Files.writeString(rutaJson, jsonString)
-        println("Conversión completada")
+        println("Conversión correcta")
 
     } catch (e: Exception) {
-        println("Error")
+        println("Error, no se puede leer el fichero")
     }
 }
 
@@ -326,10 +330,10 @@ fun convertirCSVaXML(rutaCsv: Path, rutaXml: Path) {
         val xmlMapper = XmlMapper().registerKotlinModule()
         val xmlString = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(contenedor)
         rutaXml.toFile().writeText(xmlString)
-        println("Conversión completada")
+        println("Conversión correcta")
 
     } catch (e: Exception) {
-        println("Error")
+        println("Error, no se puede leer el fichero")
     }
 }
 
@@ -363,10 +367,10 @@ fun convertirJSONaXML(rutaJson: Path, rutaXml: Path) {
         val xmlMapper = XmlMapper().registerKotlinModule()
         val xmlString = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(contenedor)
         fichero.writeText(xmlString)
-        println("Conversion completada")
+        println("Conversion correcta")
 
     } catch (e: Exception) {
-        println("Error")
+        println("Error, no se puede leer el fichero")
     }
 }
 
@@ -397,10 +401,10 @@ fun convertirXMLaCSV(rutaXml: Path, rutaCsv: Path) {
                 )
             }
         }
-        println("Conversion completada")
+        println("Conversion correcta")
 
     } catch (e: Exception) {
-        println("Error")
+        println("Error, no se puede leer el fichero")
     }
 
 }
@@ -435,9 +439,9 @@ fun convertirXMLaJSON(rutaXml: Path, rutaJson: Path) {
         val jsonConfigurador = Json { prettyPrint = true }
         val jsonString = jsonConfigurador.encodeToString(mecanicoJSON)
         Files.writeString(rutaJson, jsonString)
-        println("Conversion completada")
+        println("Conversion correcta")
 
     } catch (e: Exception) {
-        println("Error")
+        println("Error, no se puede leer el fichero")
     }
 }
